@@ -9,7 +9,7 @@ import json
 # --- CONFIGURAÇÃO DA IA ---
 # Certifique-se de configurar a variável de ambiente GEMINI_API_KEY no Streamlit Cloud
 api_key = st.secrets.get("GEMINI_API_KEY")
-client = instructor.from_generative_ai(genai.Client(api_key=api_key))
+client = instructor.from_genai(genai.Client(api_key=api_key))
 
 # --- CLASSES DO SCHEMA (O Coração do Motor) ---
 class Localidade(BaseModel):

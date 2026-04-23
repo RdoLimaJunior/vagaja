@@ -3,3 +3,4 @@ instructor
 google-genai
 pypdf
 pydantic
+jsonref
