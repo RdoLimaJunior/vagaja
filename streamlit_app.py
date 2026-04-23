@@ -14,33 +14,34 @@ import plotly.graph_objects as go
 api_key = st.secrets.get("GEMINI_API_KEY")
 client = instructor.from_genai(genai.Client(api_key=api_key))
 
-# --- CSS PERSONALIZADO PARA GLASSMORPHISM ---
+# --- CSS PERSONALIZADO PARA DESIGN CLARO E LEVE ---
 st.markdown("""
 <style>
-    /* Reset e variáveis de cor */
+    /* Reset e variáveis de cor - Tema Claro */
     :root {
-        --primary-bg: #f8fafc;
-        --secondary-bg: #ffffff;
-        --accent-color: #3b82f6;
+        --primary-bg: #ffffff;
+        --secondary-bg: #f8fafc;
+        --accent-color: #2563eb;
         --accent-light: #dbeafe;
+        --accent-hover: #1d4ed8;
         --text-primary: #1e293b;
         --text-secondary: #64748b;
-        --glass-bg: rgba(255, 255, 255, 0.25);
-        --glass-border: rgba(255, 255, 255, 0.18);
-        --shadow-light: 0 8px 32px rgba(0, 0, 0, 0.1);
-        --shadow-medium: 0 12px 40px rgba(0, 0, 0, 0.15);
-        --border-radius: 16px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --text-light: #94a3b8;
+        --border-color: #e2e8f0;
+        --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+        --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07);
+        --border-radius: 12px;
+        --transition: all 0.2s ease;
     }
 
-    /* Body e background */
+    /* Body e background - Fundo claro */
     .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
         background-attachment: fixed;
         min-height: 100vh;
     }
 
-    /* Container principal */
+    /* Container principal - Mais clean */
     .block-container {
         background: transparent !important;
         padding: 2rem 1rem;
@@ -48,45 +49,41 @@ st.markdown("""
         margin: 0 auto;
     }
 
-    /* Header */
+    /* Header - Design clean */
     .stApp header {
         background: transparent !important;
     }
 
-    /* Títulos */
+    /* Títulos - Cores claras */
     h1, h2, h3 {
         color: var(--text-primary) !important;
-        font-weight: 700 !important;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        font-weight: 600 !important;
+        margin-bottom: 1rem !important;
     }
 
-    /* Cards com glassmorphism */
+    /* Cards limpos - Sem glassmorphism pesado */
     .glass-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
+        background: var(--primary-bg);
+        border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
         box-shadow: var(--shadow-light);
-        padding: 2rem;
+        padding: 1.5rem;
         margin: 1rem 0;
         transition: var(--transition);
     }
 
     .glass-card:hover {
-        transform: translateY(-2px);
         box-shadow: var(--shadow-medium);
+        transform: translateY(-1px);
     }
 
-    /* Card CBO especial */
+    /* Card CBO especial - Mais sutil */
     .cbo-card {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border: 2px solid rgba(59, 130, 246, 0.3);
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border: 2px solid #0ea5e9;
         border-radius: var(--border-radius);
-        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.2);
-        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        padding: 1.5rem;
         margin: 1rem 0;
         position: relative;
         overflow: hidden;
@@ -98,66 +95,65 @@ st.markdown("""
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #1d4ed8, #1e40af);
+        height: 3px;
+        background: linear-gradient(90deg, #0ea5e9, #0284c7);
     }
 
-    /* Métricas */
+    /* Métricas - Design clean */
     .metric-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(15px);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
-        padding: 1.5rem;
+        background: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
         text-align: center;
         box-shadow: var(--shadow-light);
         transition: var(--transition);
     }
 
     .metric-card:hover {
-        transform: scale(1.02);
+        box-shadow: var(--shadow-medium);
     }
 
     .metric-value {
-        font-size: 2.5rem;
-        font-weight: 800;
+        font-size: 2rem;
+        font-weight: 700;
         color: var(--accent-color);
         margin: 0.5rem 0;
     }
 
     .metric-label {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        font-weight: 600;
+        font-weight: 500;
     }
 
-    /* Botões */
+    /* Botões - Design moderno */
     .stButton button {
-        background: linear-gradient(135deg, var(--accent-color), #1d4ed8);
+        background: var(--accent-color);
         color: white;
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 0.75rem 2rem;
         font-weight: 600;
         font-size: 1rem;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         transition: var(--transition);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        text-transform: none;
+        letter-spacing: 0.025em;
     }
 
     .stButton button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        background: var(--accent-hover);
+        box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+        transform: translateY(-1px);
     }
 
-    /* File uploader */
+    /* File uploader - Clean */
     .uploadedFile {
-        background: var(--glass-bg);
-        backdrop-filter: blur(15px);
-        border: 2px dashed var(--glass-border);
+        background: var(--secondary-bg);
+        border: 2px dashed var(--border-color);
         border-radius: var(--border-radius);
         padding: 2rem;
         text-align: center;
@@ -166,118 +162,151 @@ st.markdown("""
 
     .uploadedFile:hover {
         border-color: var(--accent-color);
-        background: rgba(59, 130, 246, 0.05);
+        background: #f1f5f9;
     }
 
     /* Progress bars */
     .stProgress > div > div {
-        background: linear-gradient(90deg, var(--accent-color), #1d4ed8);
-        border-radius: 10px;
+        background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+        border-radius: 6px;
     }
 
-    /* Expander */
+    /* Expander - Clean */
     .streamlit-expanderHeader {
-        background: var(--glass-bg);
-        backdrop-filter: blur(15px);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
+        background: var(--secondary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
         padding: 1rem;
-        font-weight: 600;
+        font-weight: 500;
         color: var(--text-primary);
+        transition: var(--transition);
     }
 
-    /* Dataframe */
+    .streamlit-expanderHeader:hover {
+        background: var(--primary-bg);
+    }
+
+    /* Dataframe - Clean */
     .stDataFrame {
-        background: var(--glass-bg);
-        backdrop-filter: blur(15px);
-        border: 1px solid var(--glass-border);
+        background: var(--primary-bg);
+        border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
         box-shadow: var(--shadow-light);
     }
 
-    /* Success messages */
+    /* Success messages - Clean */
     .stSuccess {
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.1));
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(34, 197, 94, 0.3);
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
         border-radius: var(--border-radius);
-        color: #16a34a;
-        font-weight: 600;
+        color: #166534;
+        font-weight: 500;
     }
 
-    /* Error messages */
+    /* Error messages - Clean */
     .stError {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: #fef2f2;
+        border: 1px solid #fecaca;
         border-radius: var(--border-radius);
         color: #dc2626;
-        font-weight: 600;
+        font-weight: 500;
     }
 
-    /* Info messages */
+    /* Info messages - Clean */
     .stInfo {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
         border-radius: var(--border-radius);
         color: var(--accent-color);
-        font-weight: 600;
+        font-weight: 500;
     }
 
-    /* Skills chart container */
+    /* Skills chart container - Clean */
     .skills-container {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
+        background: var(--primary-bg);
+        border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
-        padding: 2rem;
+        padding: 1.5rem;
         margin: 1rem 0;
         box-shadow: var(--shadow-light);
     }
 
-    /* SWOT sections */
+    /* SWOT sections - Clean */
     .swot-section {
-        background: var(--glass-bg);
-        backdrop-filter: blur(15px);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
-        padding: 1.5rem;
+        background: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
         margin: 0.5rem 0;
         transition: var(--transition);
     }
 
     .swot-section:hover {
-        transform: translateY(-1px);
-        box-shadow: var(--shadow-medium);
+        box-shadow: var(--shadow-light);
     }
 
-    .swot-strengths { border-left: 4px solid #22c55e; }
-    .swot-weaknesses { border-left: 4px solid #f59e0b; }
-    .swot-opportunities { border-left: 4px solid #3b82f6; }
-    .swot-threats { border-left: 4px solid #ef4444; }
+    .swot-strengths { border-left: 3px solid #22c55e; }
+    .swot-weaknesses { border-left: 3px solid #f59e0b; }
+    .swot-opportunities { border-left: 3px solid #3b82f6; }
+    .swot-threats { border-left: 3px solid #ef4444; }
 
-    /* Formação cards */
+    /* Formação cards - Clean */
     .formacao-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(15px);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
-        padding: 1.5rem;
+        background: var(--secondary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
         margin: 0.5rem 0;
         transition: var(--transition);
     }
 
     .formacao-card:hover {
-        transform: translateY(-1px);
+        background: var(--primary-bg);
         box-shadow: var(--shadow-light);
     }
 
-    /* Status badges */
+    /* Status badges - Clean */
     .status-completed { color: #22c55e; font-weight: 600; }
     .status-cursando { color: #3b82f6; font-weight: 600; }
     .status-trancado { color: #f59e0b; font-weight: 600; }
     .status-incompleto { color: #ef4444; font-weight: 600; }
+
+    /* Header principal - Simples */
+    .header-container {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        font-weight: 400;
+    }
+
+    /* Footer - Clean */
+    .footer-container {
+        text-align: center;
+        margin-top: 3rem;
+        padding: 2rem;
+        background: var(--secondary-bg);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+    }
+
+    .footer-text {
+        color: var(--text-secondary);
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
 
     /* Responsive design */
     @media (max-width: 768px) {
@@ -291,27 +320,12 @@ st.markdown("""
         }
 
         .metric-card {
-            padding: 1rem;
+            padding: 0.75rem;
         }
-    }
 
-    /* Scrollbar customizado */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
+        .header-title {
+            font-size: 2rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -381,13 +395,13 @@ st.set_page_config(
     page_icon="🚀"
 )
 
-# Header com glassmorphism
+# Header simples e limpo
 st.markdown("""
 <div style="text-align: center; margin-bottom: 2rem;">
-    <h1 style="font-size: 3rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: none;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: #1e293b; font-weight: 700;">
         🚀 VagaJá
     </h1>
-    <p style="font-size: 1.2rem; color: rgba(255, 255, 255, 0.9); margin: 0; font-weight: 300;">
+    <p style="font-size: 1.1rem; color: #64748b; margin: 0; font-weight: 400;">
         Motor de Inteligência para Triagem de Candidatos
     </p>
 </div>
