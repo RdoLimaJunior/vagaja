@@ -5,3 +5,5 @@ google-generativeai
 pypdf
 pydantic
 jsonref
+pandas
+plotly
