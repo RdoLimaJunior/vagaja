@@ -1,6 +1,7 @@
 streamlit
 instructor
 google-genai
+google-generativeai
 pypdf
 pydantic
 jsonref

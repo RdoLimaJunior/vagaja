@@ -9,7 +9,10 @@ import json
 # --- CONFIGURAÇÃO DA IA ---
 # Certifique-se de configurar a variável de ambiente GEMINI_API_KEY no Streamlit Cloud
 api_key = st.secrets.get("GEMINI_API_KEY")
-client = instructor.from_genai(genai.Client(api_key=api_key))
+client = instructor.from_generative_ai(
+    genai.Client(api_key=api_key),
+    mode=instructor.Mode.GEMINI_JSON,  # Essencial para forçar o formato
+)
 
 # --- CLASSES DO SCHEMA (O Coração do Motor) ---
 class Localidade(BaseModel):
@@ -61,11 +64,10 @@ class Curriculo(BaseModel):
 # --- FUNÇÃO DE EXTRAÇÃO ---
 def extrair_dados(texto):
     return client.chat.completions.create(
-        model="gemini-2.5-flash-lite",
+        model="gemini-2.0-flash",  # Modelo correto e atual
         response_model=Curriculo,
         messages=[
-            {"role": "system", "content": "Você é o Motor de Inteligência VagaJá. Extraia dados de currículos para triagem técnica. Considere hoje como Abril de 2026."},
-            {"role": "user", "content": texto}
+            {"role": "user", "content": f"VagaJá: Extraia os dados seguindo o schema. Data de referência: Abril/2026. Currículo: {texto}"}
         ],
     )
 
