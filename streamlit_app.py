@@ -61,7 +61,7 @@ class Curriculo(BaseModel):
 # --- FUNÇÃO DE EXTRAÇÃO ---
 def extrair_dados(texto):
     return client.chat.completions.create(
-        model="gemini-2.0-flash",
+        model="gemini-1.5-flash",
         response_model=Curriculo,
         messages=[
             {"role": "system", "content": "Você é o Motor de Inteligência VagaJá. Extraia dados de currículos para triagem técnica. Considere hoje como Abril de 2026."},
