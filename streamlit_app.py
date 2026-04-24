@@ -1,13 +1,14 @@
+import hashlib
+from io import BytesIO
+
 import streamlit as st
 import instructor
 from google import genai
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from pypdf import PdfReader
-import json
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
 # --- CONFIGURAÇÃO DA IA ---
 # Certifique-se de configurar a variável de ambiente GEMINI_API_KEY no Streamlit Cloud
@@ -516,6 +517,7 @@ class Curriculo(BaseModel):
     linkedin: Optional[str] = None
     portfolio: List[str] = Field(default_factory=list)
     outros_links: List[str] = Field(default_factory=list)
+    necessita_verificacao: List[str] = Field(default_factory=list)
 
 # --- FUNÇÃO DE EXTRAÇÃO ---
 def extrair_dados(texto):
@@ -523,9 +525,89 @@ def extrair_dados(texto):
         model="gemini-2.5-flash-lite",
         response_model=Curriculo,
         messages=[
-            {"role": "user", "content": f"VagaJá: Extraia os dados seguindo o schema. Data de referência: Abril/2026. Currículo: {texto}"}
+            {
+                "role": "system",
+                "content": "Você é um assistente especialista em recrutamento e análise de currículos. Extraia o currículo para o schema e aponte possíveis indícios de inconsistência."
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Texto do currículo:\n{texto}\n\n"
+                    "Extraia os dados conforme o schema vigente. "
+                    "Inclua um campo 'necessita_verificacao' com trechos que merecem revisão humana. "
+                    "Apontar experiências sem evidência, senioridade desproporcional, informações contraditórias ou vagas demais com pouco contexto."
+                )
+            }
         ],
     )
+
+# --- UTILITÁRIOS DE LINK ---
+MAX_CV_CHARACTERS = 20000
+MAX_PDF_BYTES = 2 * 1024 * 1024  # 2MB, limite realista para CVs apenas de texto
+
+
+def sanitize_url(url: str) -> str:
+    if not url:
+        return ""
+    url = url.strip().strip('"').strip("'").strip(".,;:")
+    if url.startswith("www."):
+        url = "https://" + url
+    if not url.lower().startswith("http://") and not url.lower().startswith("https://"):
+        url = "https://" + url
+    return url
+
+
+def normalize_text(text: str) -> str:
+    normalized = "\n".join(
+        line.strip() for line in text.splitlines() if line.strip()
+    )
+    return normalized[:MAX_CV_CHARACTERS]
+
+
+def compute_pdf_hash(raw_bytes: bytes) -> str:
+    return hashlib.sha256(raw_bytes).hexdigest()
+
+
+@st.cache_data(show_spinner=False)
+def extrair_dados_cache(pdf_hash: str, texto: str) -> dict:
+    response = client.chat.completions.create(
+        model="gemini-2.5-flash-lite",
+        response_model=Curriculo,
+        messages=[
+            {
+                "role": "system",
+                "content": "Você é um assistente especialista em recrutamento e análise de currículos. Extraia o currículo para o schema e aponte possíveis indícios de inconsistência."
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Texto do currículo:\n{texto}\n\n"
+                    "Extraia os dados conforme o schema vigente. "
+                    "Inclua um campo 'necessita_verificacao' com trechos que merecem revisão humana. "
+                    "Apontar experiências sem evidência, senioridade desproporcional, informações contraditórias ou vagas demais com pouco contexto."
+                )
+            }
+        ],
+    )
+    return response.model_dump()
+
+
+def extrair_dados(pdf_hash: str, texto: str) -> Curriculo:
+    data = extrair_dados_cache(pdf_hash, texto)
+    return Curriculo.model_validate(data)
+
+
+def render_embedded_link(title: str, url: str):
+    safe_url = sanitize_url(url)
+    if not safe_url:
+        return
+    st.markdown(f"**{title}:** [{safe_url}]({safe_url})")
+    st.markdown(
+        f'<div style="margin: 1rem 0; border: 1px solid var(--border-color); border-radius: 12px; overflow:hidden;"><iframe src="{safe_url}" width="100%" height="450" frameborder="0"></iframe></div>',
+        unsafe_allow_html=True,
+    )
+    if "linkedin.com" in safe_url.lower():
+        st.markdown("<small>Se o LinkedIn não carregar no iframe, abra o link acima em uma nova aba.</small>", unsafe_allow_html=True)
 
 # --- INTERFACE STREAMLIT ---
 st.set_page_config(
@@ -554,25 +636,32 @@ st.markdown("Faça upload de um arquivo PDF para análise inteligente dos dados 
 uploaded_file = st.file_uploader(
     "Selecione o arquivo PDF",
     type="pdf",
-    help="Apenas arquivos PDF são aceitos. Tamanho máximo: 200MB",
+    help="Apenas arquivos PDF são aceitos. Limite recomendado: 2MB. Arquivos grandes com muitas imagens não são ideais para CVs.",
     label_visibility="collapsed"
 )
 
 if uploaded_file:
-    st.markdown("### 📊 Processamento")
-    if st.button("🚀 **Processar Candidato**", type="primary", use_container_width=True):
-        with st.spinner("🤖 O motor VagaJá está analisando o currículo..."):
-            reader = PdfReader(uploaded_file)
-            texto = "".join([page.extract_text() for page in reader.pages])
+    if uploaded_file.size > MAX_PDF_BYTES:
+        st.error(
+            "Arquivo muito grande. Currículos com mais de 2MB normalmente não são documentos de texto puros e devem ser evitados. "
+            "Por favor, envie um PDF limpo e com menos de 2MB."
+        )
+    else:
+        st.markdown("### 📊 Processamento")
+        if st.button("🚀 **Processar Candidato**", type="primary", use_container_width=True):
+            with st.spinner("🤖 O motor VagaJá está analisando o currículo..."):
+                raw_bytes = uploaded_file.read()
+                pdf_hash = compute_pdf_hash(raw_bytes)
+                reader = PdfReader(BytesIO(raw_bytes))
+                raw_text = " ".join(
+                    page.extract_text() or "" for page in reader.pages
+                )
+                texto = normalize_text(raw_text)
 
-            try:
-                candidato = extrair_dados(texto)
+                if not texto:
+                    raise ValueError("Não foi possível extrair texto do PDF.")
 
-                # Success message
-                st.success(f"✅ **{candidato.nome}** processado com sucesso!")
-
-                # CBO Principal - Destaque especial
-                st.markdown('<div class="cbo-card">', unsafe_allow_html=True)
+                candidato = extrair_dados(pdf_hash, texto)
                 st.markdown("## 🎯 CBO Principal")
 
                 col_cbo_title, col_cbo_code = st.columns([3, 1])
@@ -766,31 +855,40 @@ if uploaded_file:
                     # LinkedIn
                     if candidato.linkedin:
                         st.markdown("### 💼 LinkedIn")
-                        st.components.v1.html(
-                            f'<iframe src="{candidato.linkedin}" width="100%" height="400" frameborder="0"></iframe>',
-                            height=400
-                        )
+                        render_embedded_link("LinkedIn do candidato", candidato.linkedin)
 
                     # Portfólio
                     if candidato.portfolio:
                         st.markdown("### 🎨 Portfólio")
                         for i, link in enumerate(candidato.portfolio):
                             st.markdown(f"**Portfólio {i+1}:**")
-                            st.components.v1.html(
-                                f'<iframe src="{link}" width="100%" height="400" frameborder="0"></iframe>',
-                                height=400
-                            )
+                            render_embedded_link(f"Portfólio {i+1}", link)
 
                     # Outros Links
                     if candidato.outros_links:
                         st.markdown("### 🌐 Outros Links")
                         for i, link in enumerate(candidato.outros_links):
                             st.markdown(f"**Link {i+1}:**")
-                            st.components.v1.html(
-                                f'<iframe src="{link}" width="100%" height="400" frameborder="0"></iframe>',
-                                height=400
-                            )
+                            render_embedded_link(f"Link {i+1}", link)
 
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                # Necessita verificação
+                if candidato.necessita_verificacao:
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("## 🛡️ Necessita verificação")
+                    st.markdown(
+                        f"<p style='color: var(--text-secondary); margin-bottom: 0.75rem;'>" \
+                        f"Foram identificados {len(candidato.necessita_verificacao)} trechos que merecem revisão humana.</p>",
+                        unsafe_allow_html=True,
+                    )
+                    for item in candidato.necessita_verificacao:
+                        st.markdown(f"- {item}")
+                    st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("## 🛡️ Necessita verificação")
+                    st.success("Nenhum indício claro de inconsistência detectado automaticamente. Ainda assim, revise o currículo manualmente.")
                     st.markdown('</div>', unsafe_allow_html=True)
 
                 # Análise SWOT
@@ -831,9 +929,6 @@ if uploaded_file:
                 # JSON Completo
                 with st.expander("🔍 **Ver Dados Completos (JSON)**"):
                     st.json(candidato.model_dump_json())
-
-            except Exception as e:
-                st.error(f"❌ **Erro ao processar:** {str(e)}")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
