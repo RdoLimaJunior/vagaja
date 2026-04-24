@@ -41,6 +41,17 @@ st.markdown("""
         min-height: 100vh;
     }
 
+    /* Forçar tema claro em todo o app */
+    .stApp {
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%) !important;
+        color: var(--text-primary) !important;
+    }
+
+    /* Sidebar com fundo claro */
+    .css-1d391kg, .css-12oz5g7 {
+        background: var(--secondary-bg) !important;
+    }
+
     /* Container principal - Mais clean */
     .block-container {
         background: transparent !important;
@@ -308,6 +319,132 @@ st.markdown("""
         font-weight: 500;
     }
 
+    /* === REGRAS ADICIONAIS PARA TEMA CLARO FORÇADO === */
+
+    /* Garantir que todos os textos sejam escuros */
+    * {
+        color: var(--text-primary) !important;
+    }
+
+    /* Cards e containers */
+    .stCard, .element-container, .stVerticalBlock {
+        background: var(--primary-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--border-radius) !important;
+    }
+
+    /* Inputs e form elements */
+    .stTextInput, .stNumberInput, .stSelectbox, .stMultiselect, .stTextArea {
+        background: var(--primary-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .stTextInput input, .stNumberInput input, .stSelectbox select, .stMultiselect select, .stTextArea textarea {
+        background: var(--primary-bg) !important;
+        color: var(--text-primary) !important;
+        border: none !important;
+    }
+
+    /* Labels */
+    .stTextInput label, .stNumberInput label, .stSelectbox label, .stMultiselect label, .stTextArea label {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+    }
+
+    /* Botões */
+    .stButton button {
+        background: var(--accent-color) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2) !important;
+        transition: var(--transition) !important;
+        text-transform: none !important;
+        letter-spacing: 0.025em !important;
+    }
+
+    .stButton button:hover {
+        background: var(--accent-hover) !important;
+        box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* File uploader */
+    .uploadedFile {
+        background: var(--secondary-bg) !important;
+        border: 2px dashed var(--border-color) !important;
+        border-radius: var(--border-radius) !important;
+        padding: 2rem !important;
+        text-align: center !important;
+        transition: var(--transition) !important;
+    }
+
+    .uploadedFile:hover {
+        border-color: var(--accent-color) !important;
+        background: #f1f5f9 !important;
+    }
+
+    /* Progress bars */
+    .stProgress > div > div {
+        background: linear-gradient(90deg, var(--accent-color), var(--accent-hover)) !important;
+        border-radius: 6px !important;
+    }
+
+    /* Expander */
+    .streamlit-expanderHeader {
+        background: var(--secondary-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+        font-weight: 500 !important;
+        color: var(--text-primary) !important;
+        transition: var(--transition) !important;
+    }
+
+    .streamlit-expanderHeader:hover {
+        background: var(--primary-bg) !important;
+    }
+
+    /* Dataframe */
+    .stDataFrame {
+        background: var(--primary-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--border-radius) !important;
+        box-shadow: var(--shadow-light) !important;
+    }
+
+    /* Success messages */
+    .stSuccess {
+        background: #f0fdf4 !important;
+        border: 1px solid #bbf7d0 !important;
+        color: #166534 !important;
+    }
+
+    /* Error messages */
+    .stError {
+        background: #fef2f2 !important;
+        border: 1px solid #fecaca !important;
+        color: #dc2626 !important;
+    }
+
+    /* Info messages */
+    .stInfo {
+        background: #eff6ff !important;
+        border: 1px solid #bfdbfe !important;
+        color: #1d4ed8 !important;
+    }
+
+    /* Warning messages */
+    .stWarning {
+        background: #fffbeb !important;
+        border: 1px solid #fde68a !important;
+        color: #d97706 !important;
+    }
+
     /* Responsive design */
     @media (max-width: 768px) {
         .block-container {
@@ -376,6 +513,9 @@ class Curriculo(BaseModel):
     matriz_skills: List[Skill]
     pitch_do_recrutador: str
     swot_do_candidato: SWOT
+    linkedin: Optional[str] = None
+    portfolio: List[str] = Field(default_factory=list)
+    outros_links: List[str] = Field(default_factory=list)
 
 # --- FUNÇÃO DE EXTRAÇÃO ---
 def extrair_dados(texto):
@@ -524,20 +664,20 @@ if uploaded_file:
                         height=350
                     )
                     fig_skills.update_layout(
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        font_color='white',
+                        plot_bgcolor='rgba(255,255,255,0)',
+                        paper_bgcolor='rgba(255,255,255,0)',
+                        font_color='var(--text-primary)',
                         xaxis_title="",
                         yaxis_title="Nível",
                         showlegend=True,
                         legend=dict(
-                            bgcolor='rgba(255,255,255,0.1)',
-                            bordercolor='rgba(255,255,255,0.2)',
+                            bgcolor='rgba(248,250,252,0.9)',
+                            bordercolor='var(--border-color)',
                             borderwidth=1
                         )
                     )
-                    fig_skills.update_xaxes(gridcolor='rgba(255,255,255,0.1)')
-                    fig_skills.update_yaxes(gridcolor='rgba(255,255,255,0.1)')
+                    fig_skills.update_xaxes(gridcolor='var(--border-color)')
+                    fig_skills.update_yaxes(gridcolor='var(--border-color)')
 
                     st.plotly_chart(fig_skills, use_container_width=True, config={'displayModeBar': False})
 
@@ -605,17 +745,52 @@ if uploaded_file:
                         height=250
                     )
                     fig_idiomas.update_layout(
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        font_color='white',
+                        plot_bgcolor='rgba(255,255,255,0)',
+                        paper_bgcolor='rgba(255,255,255,0)',
+                        font_color='var(--text-primary)',
                         xaxis_title="",
                         yaxis_title="",
                         showlegend=False
                     )
-                    fig_idiomas.update_xaxes(gridcolor='rgba(255,255,255,0.1)')
-                    fig_idiomas.update_yaxes(gridcolor='rgba(255,255,255,0.1)')
+                    fig_idiomas.update_xaxes(gridcolor='var(--border-color)')
+                    fig_idiomas.update_yaxes(gridcolor='var(--border-color)')
 
                     st.plotly_chart(fig_idiomas, use_container_width=True, config={'displayModeBar': False})
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                # Links e Portfólio
+                if candidato.linkedin or candidato.portfolio or candidato.outros_links:
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("## 🔗 Links e Portfólio")
+
+                    # LinkedIn
+                    if candidato.linkedin:
+                        st.markdown("### 💼 LinkedIn")
+                        st.components.v1.html(
+                            f'<iframe src="{candidato.linkedin}" width="100%" height="400" frameborder="0"></iframe>',
+                            height=400
+                        )
+
+                    # Portfólio
+                    if candidato.portfolio:
+                        st.markdown("### 🎨 Portfólio")
+                        for i, link in enumerate(candidato.portfolio):
+                            st.markdown(f"**Portfólio {i+1}:**")
+                            st.components.v1.html(
+                                f'<iframe src="{link}" width="100%" height="400" frameborder="0"></iframe>',
+                                height=400
+                            )
+
+                    # Outros Links
+                    if candidato.outros_links:
+                        st.markdown("### 🌐 Outros Links")
+                        for i, link in enumerate(candidato.outros_links):
+                            st.markdown(f"**Link {i+1}:**")
+                            st.components.v1.html(
+                                f'<iframe src="{link}" width="100%" height="400" frameborder="0"></iframe>',
+                                height=400
+                            )
+
                     st.markdown('</div>', unsafe_allow_html=True)
 
                 # Análise SWOT
@@ -664,8 +839,8 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown("""
-<div style="text-align: center; margin-top: 3rem; padding: 2rem; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 16px;">
-    <p style="color: rgba(255, 255, 255, 0.8); margin: 0; font-size: 0.9rem;">
+<div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--secondary-bg); border: 1px solid var(--border-color); border-radius: 16px;">
+    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
         🚀 <strong>VagaJá</strong> - Motor de Inteligência para Recrutamento | Powered by Gemini AI
     </p>
 </div>
